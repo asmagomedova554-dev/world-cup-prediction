@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>世界杯赛前预测实验室</title>
+  <style>
+    :root {
+      --bg: #07110f;
+      --panel: #0d1b18;
+      --panel-2: #12241f;
+      --line: rgba(255,255,255,.1);
+      --muted: #8da39c;
+      --text: #f1f7f4;
+      --green: #50e3a4;
+      --green-deep: #1aad74;
+      --amber: #f7c65a;
+      --red: #ff716c;
+      --blue: #62a8ff;
+      --shadow: 0 24px 70px rgba(0,0,0,.3);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% -10%, rgba(80,227,164,.17), transparent 30%),
+        radial-gradient(circle at 95% 5%, rgba(98,168,255,.12), transparent 25%),
+        var(--bg);
+    }
+    button { font: inherit; }
+    .shell { max-width: 1280px; margin: auto; padding: 28px 28px 52px; }
+    header { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 28px; }
+    .brand { display: flex; gap: 14px; align-items: center; }
+    .logo {
+      width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center;
+      color: #06130f; font-weight: 900; font-size: 24px;
+      background: linear-gradient(145deg, var(--green), #b8ffd9);
+      box-shadow: 0 0 38px rgba(80,227,164,.25);
+    }
+    .eyebrow { color: var(--green); font-size: 12px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { font-size: 22px; margin: 5px 0 0; }
+    .updated { color: var(--muted); font-size: 13px; text-align: right; line-height: 1.7; }
+    .updated strong { color: var(--text); }
+    .match-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+    .match-tab {
+      border: 1px solid var(--line); color: var(--muted); background: rgba(255,255,255,.025);
+      border-radius: 16px; padding: 16px 18px; cursor: pointer; text-align: left; transition: .25s ease;
+    }
+    .match-tab:hover { border-color: rgba(80,227,164,.4); transform: translateY(-2px); }
+    .match-tab.active { color: var(--text); border-color: rgba(80,227,164,.6); background: rgba(80,227,164,.08); }
+    .tab-time { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .tab-teams { display: flex; align-items: center; justify-content: space-between; font-weight: 800; }
+    .flag { font-size: 24px; vertical-align: middle; margin-right: 7px; }
+    .grid { display: grid; grid-template-columns: 1.45fr .85fr; gap: 18px; }
+    .card { background: linear-gradient(160deg, rgba(18,36,31,.96), rgba(10,24,20,.96)); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+    .hero { padding: 30px; position: relative; overflow: hidden; }
+    .hero::after {
+      content: ""; position: absolute; width: 280px; height: 280px; border-radius: 50%;
+      right: -100px; top: -130px; background: rgba(80,227,164,.09); filter: blur(3px);
+    }
+    .stage { display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 12px var(--red); }
+    .versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 30px; }
+    .team:last-child { text-align: right; }
+    .team-flag { font-size: 62px; filter: drop-shadow(0 8px 15px rgba(0,0,0,.25)); }
+    .team-name { font-size: 30px; font-weight: 900; margin: 8px 0 4px; }
+    .rank { color: var(--muted); font-size: 13px; }
+    .vs { color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: .2em; text-align: center; }
+    .prediction-score { margin-top: 7px; font-size: 42px; color: var(--green); letter-spacing: .05em; }
+    .confidence { display: flex; align-items: center; gap: 12px; margin-top: 30px; padding: 14px 16px; border-radius: 14px; background: rgba(0,0,0,.18); }
+    .confidence-label { min-width: 78px; color: var(--muted); font-size: 12px; }
+    .track { flex: 1; height: 7px; border-radius: 10px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .fill { height: 100%; width: 68%; border-radius: inherit; background: linear-gradient(90deg, var(--green-deep), var(--green)); transition: width .45s ease; }
+    .confidence-value { color: var(--green); font-weight: 900; font-size: 13px; }
+    .probability { padding: 24px; }
+    .card-title { font-size: 13px; color: var(--muted); font-weight: 800; letter-spacing: .08em; margin-bottom: 20px; }
+    .prob-list { display: grid; gap: 16px; }
+    .prob-row { display: grid; grid-template-columns: 72px 1fr 44px; align-items: center; gap: 12px; font-size: 13px; }
+    .prob-track { height: 9px; background: rgba(255,255,255,.07); border-radius: 10px; overflow: hidden; }
+    .prob-fill { height: 100%; border-radius: inherit; transition: width .45s ease; }
+    .home { background: var(--green); } .draw { background: var(--amber); } .away { background: var(--blue); }
+    .prob-value { text-align: right; font-weight: 900; }
+    .verdict { margin-top: 24px; padding: 17px; border-radius: 15px; background: rgba(80,227,164,.075); border: 1px solid rgba(80,227,164,.15); }
+    .verdict-label { font-size: 11px; color: var(--green); letter-spacing: .12em; font-weight: 900; }
+    .verdict-text { margin-top: 7px; font-size: 15px; line-height: 1.65; }
+    .analysis { grid-column: 1 / -1; padding: 24px; }
+    .analysis-nav { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 3px; }
+    .analysis-btn {
+      flex: 1; min-width: 120px; border: 1px solid var(--line); background: rgba(255,255,255,.025);
+      color: var(--muted); padding: 12px; border-radius: 12px; cursor: pointer; transition: .2s;
+    }
+    .analysis-btn.active { color: #07110f; background: var(--green); border-color: var(--green); font-weight: 900; }
+    .analysis-content { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; margin-top: 22px; }
+    .analysis-copy h2 { margin: 0 0 11px; font-size: 22px; }
+    .analysis-copy p { margin: 0; color: #bfd0ca; line-height: 1.9; font-size: 14px; }
+    .signal-list { display: grid; gap: 10px; }
+    .signal { display: flex; justify-content: space-between; gap: 15px; align-items: center; padding: 13px 14px; background: rgba(0,0,0,.17); border-radius: 12px; font-size: 13px; }
+    .signal span { color: var(--muted); }
+    .signal strong.positive { color: var(--green); } .signal strong.warning { color: var(--amber); } .signal strong.negative { color: var(--red); }
+    .bottom-grid { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .scores, .scenario { padding: 24px; }
+    .score-bars { display: grid; gap: 12px; }
+    .score-item { display: grid; grid-template-columns: 48px 1fr 38px; gap: 12px; align-items: center; font-size: 13px; }
+    .score-track { height: 6px; border-radius: 10px; background: rgba(255,255,255,.07); overflow: hidden; }
+    .score-fill { height: 100%; background: var(--green); border-radius: inherit; transition: width .45s ease; }
+    .scenario-controls { display: grid; gap: 15px; }
+    label { color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; }
+    input[type="range"] { width: 100%; accent-color: var(--green); margin-top: 7px; }
+    .scenario-result { margin-top: 18px; padding: 14px; border-radius: 12px; background: rgba(0,0,0,.18); line-height: 1.7; font-size: 13px; color: #bfd0ca; }
+    .research { grid-column: 1 / -1; padding: 24px; }
+    .research-head { display: flex; justify-content: space-between; gap: 18px; align-items: start; margin-bottom: 20px; }
+    .research-title { margin: 0; font-size: 22px; }
+    .research-note { color: var(--muted); font-size: 12px; line-height: 1.7; max-width: 520px; text-align: right; }
+    .research-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .research-item { padding: 16px; border-radius: 14px; background: rgba(0,0,0,.17); border: 1px solid rgba(255,255,255,.06); }
+    .research-step { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .step-index { color: var(--green); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+    .step-dimension { color: var(--amber); font-size: 11px; }
+    .research-query { font-size: 14px; font-weight: 800; line-height: 1.55; margin-bottom: 8px; }
+    .research-finding { color: #bfd0ca; font-size: 12px; line-height: 1.7; min-height: 62px; }
+    .research-meta { display: flex; justify-content: space-between; gap: 10px; align-items: end; margin-top: 12px; color: var(--muted); font-size: 10px; }
+    .research-meta a { color: var(--green); text-decoration: none; }
+    .method { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+    .method-step { padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.65; background: rgba(255,255,255,.02); }
+    .method-step strong { display: block; color: var(--text); margin-bottom: 3px; }
+    .fusion { grid-column: 1 / -1; padding: 24px; }
+    .fusion-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+    .fusion-item { padding: 15px; border-radius: 14px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.06); }
+    .fusion-name { color: var(--muted); font-size: 11px; min-height: 34px; line-height: 1.5; }
+    .fusion-weight { color: var(--green); font-size: 20px; font-weight: 900; margin: 6px 0; }
+    .fusion-probs { font-size: 11px; color: #bfd0ca; line-height: 1.7; }
+    .fusion-quality { margin-top: 8px; color: var(--amber); font-size: 10px; line-height: 1.5; }
+    .fusion-formula { margin-top: 16px; padding: 14px; border-radius: 12px; background: rgba(80,227,164,.06); color: #bfd0ca; font-size: 12px; line-height: 1.75; }
+    .live-factors { grid-column: 1 / -1; padding: 24px; }
+    .factor-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .factor-item { padding: 15px; border-radius: 14px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.06); }
+    .factor-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+    .factor-name { font-size: 13px; font-weight: 800; }
+    .status { padding: 3px 7px; border-radius: 20px; font-size: 9px; font-weight: 900; white-space: nowrap; }
+    .status.confirmed { color: var(--green); background: rgba(80,227,164,.1); }
+    .status.pending { color: var(--amber); background: rgba(247,198,90,.1); }
+    .status.missing { color: var(--red); background: rgba(255,113,108,.1); }
+    .factor-text { color: #bfd0ca; font-size: 11px; line-height: 1.7; min-height: 56px; }
+    .factor-impact { color: var(--muted); font-size: 10px; margin-top: 9px; }
+    .sources { grid-column: 1 / -1; color: var(--muted); font-size: 11px; line-height: 1.8; padding: 0 5px; }
+    .sources a { color: #a6c7bc; }
+    @media (max-width: 850px) {
+      .shell { padding: 20px 14px 38px; }
+      header, .versus { gap: 14px; }
+      .grid, .bottom-grid, .analysis-content, .research-grid, .method, .fusion-grid, .factor-grid { grid-template-columns: 1fr; }
+      .hero, .probability, .analysis, .scores, .scenario { padding: 20px; }
+      .team-name { font-size: 22px; } .team-flag { font-size: 45px; }
+      .prediction-score { font-size: 30px; }
+      .analysis, .research, .fusion, .live-factors { grid-column: auto; } .bottom-grid, .method, .sources { grid-column: auto; }
+      .research-head { display: block; } .research-note { text-align: left; margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="logo">W</div>
+        <div><div class="eyebrow">World Cup Intelligence</div><h1>世界杯赛前预测实验室</h1></div>
+      </div>
+      <div class="updated">模型版本 <strong>HYBRID 2.0</strong><br>数据更新：2026-06-12</div>
+    </header>
+
+    <section class="match-tabs" id="matchTabs"></section>
+
+    <section class="grid">
+      <article class="card hero">
+        <div class="stage"><span class="live-dot"></span><span id="stage"></span></div>
+        <div class="versus">
+          <div class="team"><div class="team-flag" id="homeFlag"></div><div class="team-name" id="homeName"></div><div class="rank" id="homeRank"></div></div>
+          <div class="vs">PREDICTED<div class="prediction-score" id="predictionScore"></div></div>
+          <div class="team"><div class="team-flag" id="awayFlag"></div><div class="team-name" id="awayName"></div><div class="rank" id="awayRank"></div></div>
+        </div>
+        <div class="confidence"><span class="confidence-label">模型置信度</span><div class="track"><div class="fill" id="confidenceFill"></div></div><span class="confidence-value" id="confidenceValue"></span></div>
+      </article>
+
+      <article class="card probability">
+        <div class="card-title">融合模型 · 最终胜平负概率</div>
+        <div class="prob-list" id="probList"></div>
+        <div class="verdict"><div class="verdict-label">MODEL VERDICT</div><div class="verdict-text" id="verdict"></div></div>
+      </article>
+
+      <section class="method">
+        <div class="method-step"><strong>01 搜索与核实</strong>赛程、排名、近期表现、阵容伤停、场地环境。</div>
+        <div class="method-step"><strong>02 双层建模</strong>五维负责解释，数据模型负责生成概率。</div>
+        <div class="method-step"><strong>03 概率融合</strong>融合Elo、攻防代理、泊松比分和市场校验。</div>
+        <div class="method-step"><strong>04 赛后复盘</strong>记录结果，检查评分偏差并调整后续判断。</div>
+      </section>
+
+      <article class="card fusion">
+        <div class="research-head">
+          <h2 class="research-title">数据模型融合层</h2>
+          <div class="research-note">不同模型独立输出胜/平/负概率，再按数据质量加权融合。缺少可靠数据的模型必须降权。</div>
+        </div>
+        <div class="fusion-grid" id="fusionGrid"></div>
+        <div class="fusion-formula" id="fusionFormula"></div>
+      </article>
+
+      <article class="card live-factors">
+        <div class="research-head">
+          <h2 class="research-title">临场修正层</h2>
+          <div class="research-note">这些因素可能在开赛前数小时显著改变概率。正式首发公布后，应重新计算最终预测。</div>
+        </div>
+        <div class="factor-grid" id="factorGrid"></div>
+      </article>
+
+      <article class="card research">
+        <div class="research-head">
+          <h2 class="research-title">搜索过程与证据链</h2>
+          <div class="research-note">先搜索、再评分、最后预测。每条事实必须标注影响的模型维度；无法核实的信息不作为确定性结论。</div>
+        </div>
+        <div class="research-grid" id="researchGrid"></div>
+      </article>
+
+      <article class="card analysis">
+        <div class="analysis-nav" id="analysisNav"></div>
+        <div class="analysis-content">
+          <div class="analysis-copy"><h2 id="analysisTitle"></h2><p id="analysisText"></p></div>
+          <div class="signal-list" id="signalList"></div>
+        </div>
+      </article>
+
+      <section class="bottom-grid">
+        <article class="card scores"><div class="card-title">泊松修正 · 最可能比分分布</div><div class="score-bars" id="scoreBars"></div></article>
+        <article class="card scenario">
+          <div class="card-title">临场情景模拟器</div>
+          <div class="scenario-controls">
+            <div><label>主队状态加成 <strong id="homeBoostLabel">0</strong></label><input id="homeBoost" type="range" min="-10" max="10" value="0"></div>
+            <div><label>客队状态加成 <strong id="awayBoostLabel">0</strong></label><input id="awayBoost" type="range" min="-10" max="10" value="0"></div>
+          </div>
+          <div class="scenario-result" id="scenarioResult"></div>
+        </article>
+      </section>
+
+      <div class="sources">公开信息参考：
+        <a href="https://www.theguardian.com/football/2026/jun/11/canada-world-cup-opening-game-jesse-marsch">加拿大赛前报道</a>、
+        <a href="https://www.theguardian.com/football/2026/jun/11/usmnt-pochettino-press-conference-paraguay-world-cup">美国赛前报道</a>、
+        <a href="https://arxiv.org/abs/1806.01930">Elo与泊松世界杯预测研究</a>。
+        五维模型负责解释，数据模型负责概率融合。当前部分Elo、xG与市场数据为明确标注的代理估计，最终首发与伤停应在开赛前再次核实，不构成投注建议。
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const matches = [
+      {
+        time: "北京时间 06月13日 03:00", stage: "B组 · 多伦多 · 东道主揭幕战",
+        home: { name: "加拿大", flag: "🇨🇦", rank: "FIFA参考排名 27" },
+        away: { name: "波黑", flag: "🇧🇦", rank: "FIFA参考排名 71" },
+        score: "1 : 1", confidence: 67, probs: [44,31,25],
+        modelScore: [69.8,61.0],
+        verdict: "融合模型给出加拿大胜率44%。五维和Elo均支持加拿大略占优势，但攻防代理与泊松模型显示平局风险较高，因此首选比分仍为1-1。",
+        fusion: [
+          ["五维解释模型",35,[43,32,25],"人工评分，证据可解释"],
+          ["Elo基础胜率",25,[48,28,24],"排名差与主场修正的代理值"],
+          ["近期攻防 / xG代理",20,[41,33,26],"缺少统一xG源，使用攻防信息代理"],
+          ["泊松比分模型",15,[40,34,26],"基于预期进球区间的近似计算"],
+          ["市场方向校验",5,[48,28,24],"未获得稳定赔率，仅低权重校验方向"]
+        ],
+        liveFactors: [
+          ["预计首发与阵型","已核实","加拿大与波黑均被预测使用4-4-2；正式首发尚未公布。","正式首发公布后重新评估进球期望"],
+          ["球员状态与伤停","部分核实","加拿大核心缺阵风险已计入；波黑锋线状态仍需临场确认。","可能影响阵容与身价、攻防数据"],
+          ["疲劳与恢复时间","待确认","暂未获得可比较的分钟负荷、旅行和恢复数据。","缺失时不额外加减分"],
+          ["裁判风格","待确认","尚未核实本场具体裁判及其黄牌、点球尺度。","确认后修正红牌与定位球风险"],
+          ["天气与场地","待确认","多伦多主场已确认；精确开赛天气与草皮状态待更新。","恶劣天气通常提高低比分概率"],
+          ["比赛动机与规则","已核实","东道主揭幕战；48队赛制下第三名也可能晋级，不输球价值较高。","提高谨慎开局和平局权重"],
+          ["战术对位","已核实","加拿大速度与压迫对阵波黑低位防守、身体对抗和定位球。","首球将显著改变比赛节奏"],
+          ["门将与定位球","待确认","正式门将与定位球主罚配置尚待首发确认。","低比分比赛中影响较大"],
+          ["赔率变化","暂无稳定数据","仅找到加拿大为轻微热门的公开方向，缺少可验证的开盘至临场曲线。","维持5%低权重校验"],
+          ["模型分歧度","已计算","各子模型主胜范围40%-48%，分歧8个百分点。","分歧中等，置信度保持67%"]
+        ],
+        research: [
+          ["赛程与场地核实","确认比赛在多伦多举行，加拿大为东道主。","环境变量","赛事日程","2026-06-12","https://royalbluemersey.sbnation.com/fifa-world-cup/80553/world-cup-open-thread-day-2-can-bih-usa-par"],
+          ["球队长期实力比较","参考FIFA排名与晋级路径：加拿大排名更高，波黑通过欧洲附加赛晋级。","综合实力","FIFA/赛程资料","2026-06-12","https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_B"],
+          ["加拿大最新阵容与状态","核实加拿大核心伤停、近期进球效率及东道主压力。","阵容与身价","Guardian","2026-06-11","https://www.theguardian.com/football/2026/jun/11/canada-world-cup-opening-game-jesse-marsch"],
+          ["波黑晋级与锋线信息","核实波黑附加赛表现及哲科伤情疑问。","攻防数据","AS","2026-06-12","https://as.com/futbol/mundial/un-jugador-de-poker-entrena-a-bosnia-y-desafia-a-la-anfitriona-canada-f202606-n/"],
+          ["两队交锋记录","确认两队此前没有可靠成年国家队直接交锋样本。","历史交锋","Group B资料","2026-06-12","https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_B"]
+        ],
+        scores: [["1-1",18],["1-0",16],["0-1",12],["0-0",11],["2-1",10]],
+        analyses: [
+          ["综合实力 · 30%","加拿大排名、球员上限和整体速度更好；波黑通过欧洲附加赛晋级，实际竞争力高于其排名，因此差距没有排名显示得那么大。", [["加拿大评分","72 × 30% = 21.6","positive"],["波黑评分","66 × 30% = 19.8","warning"],["维度优势","加拿大 +1.8分","positive"]]],
+          ["攻防数据 · 20%","加拿大进攻速度突出，但阵地战效率和稳定性一般；波黑进攻上限有限，却能依靠防守组织、身体对抗与定位球降低比赛节奏。", [["加拿大评分","65 × 20% = 13.0","positive"],["波黑评分","64 × 20% = 12.8","warning"],["维度优势","加拿大 +0.2分","warning"]]],
+          ["阵容与身价 · 20%","加拿大整体阵容价值更高，但戴维斯缺阵显著削弱左路推进。波黑若无法使用哲科，锋线支点能力同样下降。", [["加拿大评分","69 × 20% = 13.8","positive"],["波黑评分","62 × 20% = 12.4","warning"],["维度优势","加拿大 +1.4分","positive"]]],
+          ["历史交锋 · 10%","两队此前没有可靠的成年国家队直接交锋样本。该维度按中性分处理，避免用无关比赛强行推断。", [["加拿大评分","50 × 10% = 5.0","warning"],["波黑评分","50 × 10% = 5.0","warning"],["维度优势","无","warning"]]],
+          ["环境变量 · 20%","加拿大在多伦多作战，拥有主场、熟悉场地和球迷支持；同时东道主揭幕战压力可能使球队开局更加谨慎。", [["加拿大评分","82 × 20% = 16.4","positive"],["波黑评分","55 × 20% = 11.0","negative"],["维度优势","加拿大 +5.4分","positive"]]]
+        ]
+      },
+      {
+        time: "北京时间 06月13日 09:00", stage: "D组 · 洛杉矶 · 东道主揭幕战",
+        home: { name: "美国", flag: "🇺🇸", rank: "FIFA参考排名 14" },
+        away: { name: "巴拉圭", flag: "🇵🇾", rank: "FIFA参考排名 39" },
+        score: "1 : 0", confidence: 73, probs: [54,28,18],
+        modelScore: [76.8,62.8],
+        verdict: "融合模型给出美国胜率54%。Elo、五维和主场因素共同支持美国，但攻防代理与泊松模型认为巴拉圭能压低比赛节奏，首选比分1-0。",
+        fusion: [
+          ["五维解释模型",35,[54,28,18],"人工评分，证据可解释"],
+          ["Elo基础胜率",25,[58,25,17],"排名差与主场修正支持美国"],
+          ["近期攻防 / xG代理",20,[50,29,21],"美国近期波动导致胜率下调"],
+          ["泊松比分模型",15,[52,29,19],"低比分分布偏向美国小胜"],
+          ["市场方向校验",5,[55,27,18],"公开观点支持美国，缺少稳定赔率"]
+        ],
+        liveFactors: [
+          ["预计首发与阵型","部分核实","美国预测采用3-4-2-1，普利西奇与巴洛贡领衔；正式首发待公布。","阵型确认后修正进攻与转换防守"],
+          ["球员状态与伤停","已核实","美国赛前确认26名球员均可选择；巴拉圭最终阵容状态仍需核实。","美国阵容完整度加分已计入"],
+          ["疲劳与恢复时间","待确认","暂未获得两队近期分钟负荷和旅行恢复的完整对比。","缺失时不额外加减分"],
+          ["裁判风格","待确认","尚未核实本场具体裁判及其执法倾向。","可能影响身体对抗、牌数与点球风险"],
+          ["天气与场地","部分核实","洛杉矶主场与场地熟悉度已计入；精确开赛天气待更新。","高温时可能降低压迫强度"],
+          ["比赛动机与规则","已核实","东道主揭幕战，美国目标争夺小组第一；巴拉圭首轮更重视不败。","美国主动、巴拉圭偏谨慎"],
+          ["战术对位","已核实","美国高位进攻和翼卫前插，对阵巴拉圭低位防守与快速反击。","美国转换防守是核心风险"],
+          ["门将与定位球","部分核实","美国门将位置存在稳定性疑问；巴拉圭防守与定位球具备威胁。","提高巴拉圭偷得进球概率"],
+          ["赔率变化","部分核实","公开市场方向支持美国，但缺少本场稳定开盘至临场曲线。","维持5%低权重校验"],
+          ["模型分歧度","已计算","各子模型主胜范围50%-58%，分歧8个百分点。","分歧中等，置信度保持73%"]
+        ],
+        research: [
+          ["赛程与场地核实","确认比赛在洛杉矶举行，美国为东道主。","环境变量","赛事日程","2026-06-12","https://royalbluemersey.sbnation.com/fifa-world-cup/80553/world-cup-open-thread-day-2-can-bih-usa-par"],
+          ["球队长期实力比较","参考FIFA排名与小组背景，美国整体实力和阵容深度占优。","综合实力","Group D资料","2026-06-12","https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_Group_D"],
+          ["美国阵容可用情况","赛前确认美国26名球员均可供选择。","阵容与身价","Guardian","2026-06-12","https://www.theguardian.com/football/2026/jun/11/usmnt-pochettino-press-conference-paraguay-world-cup"],
+          ["双方战术与攻防特点","美国主动进攻但转换防守存在隐患；巴拉圭防守组织与反击能力较强。","攻防数据","Stars and Stripes FC","2026-06-12","https://www.starsandstripesfc.com/usmnt-news/44224/2026-world-cup-previewing-usa-vs-paraguay-all-gas-no-brakes"],
+          ["近期对赛与比赛经验","核实近期交锋倾向，并限制小样本历史交锋的影响权重。","历史交锋","赛前资料","2026-06-12","https://www.starsandstripesfc.com/usmnt-news/44224/2026-world-cup-previewing-usa-vs-paraguay-all-gas-no-brakes"]
+        ],
+        scores: [["1-0",20],["1-1",15],["2-0",13],["0-0",10],["2-1",9]],
+        analyses: [
+          ["综合实力 · 30%","美国排名、阵容深度和欧洲高水平联赛球员数量占优。巴拉圭整体上限较低，但南美区比赛经验和实战硬度缩小了差距。", [["美国评分","78 × 30% = 23.4","positive"],["巴拉圭评分","68 × 30% = 20.4","warning"],["维度优势","美国 +3.0分","positive"]]],
+          ["攻防数据 · 20%","美国进攻端拥有更多创造力，但防线和门将稳定性存在疑问。巴拉圭进攻产量有限，防守组织和反击效率较好。", [["美国评分","73 × 20% = 14.6","positive"],["巴拉圭评分","67 × 20% = 13.4","warning"],["维度优势","美国 +1.2分","positive"]]],
+          ["阵容与身价 · 20%","美国赛前阵容完整，普利西奇、巴洛贡、麦肯尼等球员提高上限。巴拉圭核心框架稳定，但整体阵容价值与替补深度较弱。", [["美国评分","80 × 20% = 16.0","positive"],["巴拉圭评分","70 × 20% = 14.0","warning"],["维度优势","美国 +2.0分","positive"]]],
+          ["历史交锋 · 10%","美国在近期交锋与主场对赛背景中略占优势，但国家队交锋样本有限，因此该维度仅给予较低权重。", [["美国评分","60 × 10% = 6.0","positive"],["巴拉圭评分","40 × 10% = 4.0","negative"],["维度优势","美国 +2.0分","positive"]]],
+          ["环境变量 · 20%","美国在洛杉矶作战，主场支持、旅途适应和场地熟悉度占优；东道主揭幕压力是主要负面变量。", [["美国评分","84 × 20% = 16.8","positive"],["巴拉圭评分","55 × 20% = 11.0","negative"],["维度优势","美国 +5.8分","positive"]]]
+        ]
+      }
+    ];
+
+    let activeMatch = 0, activeAnalysis = 0;
+    const $ = id => document.getElementById(id);
+    const signed = value => value > 0 ? `+${value}` : value;
+
+    function renderTabs() {
+      $("matchTabs").innerHTML = matches.map((m,i) => `<button class="match-tab ${i===activeMatch?"active":""}" data-match="${i}">
+        <div class="tab-time">${m.time}</div><div class="tab-teams"><span><span class="flag">${m.home.flag}</span>${m.home.name}</span><span>VS</span><span>${m.away.name}<span class="flag" style="margin-left:7px;margin-right:0">${m.away.flag}</span></span></div>
+      </button>`).join("");
+      document.querySelectorAll("[data-match]").forEach(btn => btn.onclick = () => { activeMatch=+btn.dataset.match; activeAnalysis=0; resetScenario(); render(); });
+    }
+    function renderProbability(m, probs=m.probs) {
+      const labels = [`${m.home.name}胜`,"平局",`${m.away.name}胜`], classes=["home","draw","away"];
+      $("probList").innerHTML = probs.map((p,i)=>`<div class="prob-row"><span>${labels[i]}</span><div class="prob-track"><div class="prob-fill ${classes[i]}" style="width:${p}%"></div></div><span class="prob-value">${p}%</span></div>`).join("");
+    }
+    function renderAnalysis(m) {
+      const labels = ["综合实力 30%","攻防数据 20%","阵容身价 20%","历史交锋 10%","环境变量 20%"];
+      $("analysisNav").innerHTML = labels.map((x,i)=>`<button class="analysis-btn ${i===activeAnalysis?"active":""}" data-analysis="${i}">${x}</button>`).join("");
+      const a=m.analyses[activeAnalysis]; $("analysisTitle").textContent=a[0]; $("analysisText").textContent=a[1];
+      $("signalList").innerHTML=a[2].map(x=>`<div class="signal"><span>${x[0]}</span><strong class="${x[2]}">${x[1]}</strong></div>`).join("");
+      document.querySelectorAll("[data-analysis]").forEach(btn=>btn.onclick=()=>{activeAnalysis=+btn.dataset.analysis;renderAnalysis(m);});
+    }
+    function renderResearch(m) {
+      $("researchGrid").innerHTML=m.research.map((x,i)=>`<div class="research-item">
+        <div class="research-step"><span class="step-index">SEARCH ${String(i+1).padStart(2,"0")}</span><span class="step-dimension">${x[2]}</span></div>
+        <div class="research-query">${x[0]}</div><div class="research-finding">${x[1]}</div>
+        <div class="research-meta"><span>${x[3]} · ${x[4]}</span><a href="${x[5]}" target="_blank" rel="noreferrer">查看来源 ↗</a></div>
+      </div>`).join("");
+    }
+    function renderFusion(m) {
+      $("fusionGrid").innerHTML=m.fusion.map(x=>`<div class="fusion-item">
+        <div class="fusion-name">${x[0]}</div><div class="fusion-weight">${x[1]}%</div>
+        <div class="fusion-probs">主胜 ${x[2][0]}% · 平 ${x[2][1]}% · 客胜 ${x[2][2]}%</div>
+        <div class="fusion-quality">${x[3]}</div>
+      </div>`).join("");
+      $("fusionFormula").innerHTML=`最终概率 = 五维模型×35% + Elo×25% + 近期攻防/xG代理×20% + 泊松比分×15% + 市场校验×5%。<br>
+        当前融合结果：<strong style="color:var(--green)">${m.home.name}胜 ${m.probs[0]}%</strong> / 平局 ${m.probs[1]}% / ${m.away.name}胜 ${m.probs[2]}%。`;
+    }
+    function renderFactors(m) {
+      const statusClass = s => s==="已核实" ? "confirmed" : s==="暂无稳定数据" ? "missing" : "pending";
+      $("factorGrid").innerHTML=m.liveFactors.map(x=>`<div class="factor-item">
+        <div class="factor-head"><span class="factor-name">${x[0]}</span><span class="status ${statusClass(x[1])}">${x[1]}</span></div>
+        <div class="factor-text">${x[2]}</div><div class="factor-impact">${x[3]}</div>
+      </div>`).join("");
+    }
+    function render() {
+      const m=matches[activeMatch]; renderTabs();
+      $("stage").textContent=m.stage; $("homeFlag").textContent=m.home.flag; $("homeName").textContent=m.home.name; $("homeRank").textContent=m.home.rank;
+      $("awayFlag").textContent=m.away.flag; $("awayName").textContent=m.away.name; $("awayRank").textContent=m.away.rank; $("predictionScore").textContent=m.score;
+      $("confidenceFill").style.width=m.confidence+"%"; $("confidenceValue").textContent=m.confidence+"%"; $("verdict").textContent=m.verdict;
+      renderProbability(m); renderFusion(m); renderFactors(m); renderResearch(m); renderAnalysis(m);
+      $("scoreBars").innerHTML=m.scores.map(x=>`<div class="score-item"><strong>${x[0]}</strong><div class="score-track"><div class="score-fill" style="width:${x[1]*4}%"></div></div><span>${x[1]}%</span></div>`).join("");
+      updateScenario();
+    }
+    function resetScenario(){ $("homeBoost").value=0; $("awayBoost").value=0; }
+    function updateScenario(){
+      const m=matches[activeMatch], hb=+$("homeBoost").value, ab=+$("awayBoost").value;
+      let home=Math.max(5,m.probs[0]+hb-ab/2), away=Math.max(5,m.probs[2]+ab-hb/2), draw=Math.max(10,100-home-away);
+      const total=home+draw+away; const probs=[home,draw,away].map(x=>Math.round(x/total*100)); probs[1]=100-probs[0]-probs[2];
+      $("homeBoostLabel").textContent=signed(hb); $("awayBoostLabel").textContent=signed(ab); renderProbability(m,probs);
+      const outcome=probs[0]>probs[1]&&probs[0]>probs[2]?`${m.home.name}胜`:probs[2]>probs[1]?`${m.away.name}胜`:"平局";
+      $("scenarioResult").innerHTML=`五维总分：${m.home.name} <strong style="color:var(--green)">${m.modelScore[0]}</strong> / ${m.away.name} <strong style="color:var(--blue)">${m.modelScore[1]}</strong><br>调整后首选：<strong style="color:var(--green)">${outcome}</strong>，模拟概率 ${probs[0]}% / ${probs[1]}% / ${probs[2]}%。`;
+    }
+    $("homeBoost").oninput=updateScenario; $("awayBoost").oninput=updateScenario; render();
+  </script>
+</body>
+</html>
