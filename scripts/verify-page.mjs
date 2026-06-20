@@ -2,7 +2,9 @@ import fs from "node:fs";
 
 const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const required = [
-  "美国", "澳大利亚", "苏格兰", "摩洛哥", "巴西", "海地", "土耳其", "巴拉圭",
+  "HYBRID 2.8", "北京时间 06月21日",
+  "荷兰", "瑞典", "德国", "科特迪瓦", "厄瓜多尔", "库拉索", "突尼斯", "日本",
+  "美国 2-0 澳大利亚", "摩洛哥 1-0 苏格兰", "巴西 3-0 海地", "土耳其 0-1 巴拉圭", "Brier 0.404",
   "捷克 1-1 南非", "瑞士 4-1 波黑", "加拿大 6-0 卡塔尔", "墨西哥 1-0 韩国",
   "奥地利 3-1 约旦", "葡萄牙 1-1 民主刚果", "英格兰 4-2 克罗地亚", "加纳 1-0 巴拿马", "乌兹别克斯坦 1-3 哥伦比亚",
   "法国 3-1 塞内加尔", "挪威 4-1 伊拉克", "阿根廷 3-0 阿尔及利亚",
@@ -25,13 +27,13 @@ if (html.includes("锟斤拷") || html.includes("馃")) {
 }
 
 const probabilitySets = [...html.matchAll(/probs:\s*\[(\d+),\s*(\d+),\s*(\d+)\]/g)];
-if (probabilitySets.length !== 28) {
-  throw new Error(`页面源码应有28组历史胜平负概率，实际为${probabilitySets.length}组`);
+if (probabilitySets.length !== 32) {
+  throw new Error(`页面源码应有32组历史胜平负概率，实际为${probabilitySets.length}组`);
 }
 
 const boldScores = [...html.matchAll(/boldScore:"(\d+)\s*:\s*(\d+)"/g)];
-if (boldScores.length !== 28) {
-  throw new Error(`页面源码应有28个历史大胆预测比分，实际为${boldScores.length}个`);
+if (boldScores.length !== 32) {
+  throw new Error(`页面源码应有32个历史大胆预测比分，实际为${boldScores.length}个`);
 }
 for (const [, a, b, c] of probabilitySets) {
   if (+a + +b + +c !== 100) throw new Error(`概率总和不为100: ${a}/${b}/${c}`);
